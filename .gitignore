@@ -1,0 +1,14 @@
+*.pyc
+__pycache__/
+*.onnx
+*.ckpt
+*.log
+*.csv
+.vscode/
+.idea/
+e2e_parking/
+/log/
+/ckpt/
+/eva_result/
+*.zip
+.DS_Store
