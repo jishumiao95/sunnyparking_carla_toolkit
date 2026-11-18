@@ -9,7 +9,6 @@ import pickle
 from pathlib import Path
 import plot_config as cfg
 
-
 def read_json_files(json_folder):
     coordinates, yaws = [], []
     for json_file in sorted(os.listdir(json_folder)):
@@ -21,16 +20,12 @@ def read_json_files(json_folder):
 
     return coordinates, yaws
 
-
 def world_move(P_origin, P_slot):
-    # 将角度转换为弧度
     yaw_0_rad = math.radians(P_origin[2])
     # yaw_0_rad = math.radians(90)
-    # world 坐标系转为 ego 坐标系
     dx = P_slot[0] - P_origin[0]
     dy = P_slot[1] - P_origin[1]
 
-    # 旋转变换
     x_ego = dx * math.cos(yaw_0_rad) + dy * math.sin(yaw_0_rad)
     y_ego = -dx * math.sin(yaw_0_rad) + dy * math.cos(yaw_0_rad)
 
@@ -47,14 +42,15 @@ def parse_static_npc(task_path):
             pos_data.append(new_obstacle_coords)
     return pos_data
 
-
-
 def main():
-    name_list = ["00_Zhu", "01_Yuki", "02_James", "03_Takahashi", "04_Miao", "05_Seo", "06_Shimomura", "07_Oliver", "08_Wang"]
-    
+    name_list = [
+        "00_Zhu", "01_Yuki", "02_Gia", "03_Takahashi", "04_Miao",
+        "05_Seo", "06_Shimomura", "07_Nic", "08_Wang",
+    ]
+
     for name in name_list:
 
-        source_path = '/workspace/dataset/carla_parking_human_mar19/'+ name # docker container path
+        source_path = '/path/to/dataset/' + name
     
         for log_timestamp in os.listdir(source_path):    
             
@@ -71,7 +67,7 @@ def main():
                 ego_trajectory_path = os.path.join(log_path, "measurements/")
                 obstacle_path = os.path.join(log_path, "parking_layout/")
 
-                ego_coordinates, ego_yaws = read_json_files(ego_trajectory_path)  # 读取轨迹path点集，[x,y], yaw
+                ego_coordinates, ego_yaws = read_json_files(ego_trajectory_path)
                 static_data = parse_static_npc(obstacle_path)
 
                 
@@ -121,7 +117,6 @@ def main():
                 
                     cv2.imwrite(str(save_path/filename), back_e2e_image)
                     print(f"=====> Successfully save: {str(save_path/filename)}")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Data processer from CARLA parking')

@@ -13,7 +13,6 @@ from datetime import datetime
 from data_generation import parking_position
 from data_generation.world import World
 
-
 class NetworkEvaluator:
     def __init__(self, carla_world, args):
         self._seed = args.random_seed
@@ -53,10 +52,8 @@ class NetworkEvaluator:
         self._goal_reach_y_diff = 0.6              # meter
         self._goal_reach_orientation_diff = 10.0   # degree
 
-        # 使用配置的帧率
         self._frames_per_second = args.target_fps
         
-        # 根据实际帧率调整时间
         self._num_frames_in_goal_needed = 2 * self._frames_per_second         # 2s
         self._num_frames_nearby_goal_needed = 2 * self._frames_per_second     # 2s
         self._num_frames_nearby_no_goal_needed = 2 * self._frames_per_second  # 2s

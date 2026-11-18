@@ -27,16 +27,11 @@ def read_json_files(json_folder):
 
     return coordinates, yaws, gears
 
-
 def world_move(P_origin, P_slot):
-    # 将角度转换为弧度
     yaw_0_rad = math.radians(P_origin[2])
-    # yaw_0_rad = math.radians(90)
-    # world 坐标系转为 ego 坐标系
     dx = P_slot[0] - P_origin[0]
     dy = P_slot[1] - P_origin[1]
 
-    # 旋转变换
     x_ego = dx * math.cos(yaw_0_rad) + dy * math.sin(yaw_0_rad)
     y_ego = -dx * math.sin(yaw_0_rad) + dy * math.cos(yaw_0_rad)
 
@@ -63,7 +58,6 @@ def sum_up_gear_times(ego_data, yaw_data, gear_data, target_pos=None):
 
     # Start from 1 to avoid invalid index
     for i in range(1, len(gear_data)):
-        # 如果已经找到足够的有效换挡点，则直接退出
         if len(valid_gear_shift) >= cfg.MAX_GEAR_PTS:
             break
             
@@ -75,19 +69,15 @@ def sum_up_gear_times(ego_data, yaw_data, gear_data, target_pos=None):
                 prev_gear = gear_data[i]
                 continue
                 
-            # 当前换挡位置
             current_point = [ego_data[i][0], ego_data[i][1], yaw_data[i]]
             
-            # 检查当前换挡点与目标车位的距离
             if target_pos is not None:
                 dx = current_point[0] - target_pos[0]
                 dy = current_point[1] - target_pos[1]
                 distance_to_target = math.sqrt(dx*dx + dy*dy)
                 
-                # 如果换挡点太靠近目标车位，则跳过该换挡点
                 if distance_to_target < cfg.CLOSE_TO_TARGET_THRESHOLD:
-                    prev_gear = gear_data[i]  # 更新上一个档位值
-                    # print(f"Skipping gear shift at [{current_point[0]:.2f}, {current_point[1]:.2f}] due to proximity to target ({distance_to_target:.2f}m)")
+                    prev_gear = gear_data[i]  
                     continue
             
             # This is a valid gear shift (including "N" to "R")
@@ -99,15 +89,12 @@ def sum_up_gear_times(ego_data, yaw_data, gear_data, target_pos=None):
                 dx = gear_shift_list[-1][0] - gear_shift_list[-2][0]
                 dy = gear_shift_list[-1][1] - gear_shift_list[-2][1] 
                 
-                # 检查两个换挡点之间的距离
                 if math.sqrt(dx*dx + dy*dy) < cfg.GEAR_PTS_THRESHOLD_DISTANCE: 
-                    # 如果两个换挡点太近，跳过
                     continue
                 else:
                     valid_gear_shift.append(gear_shift_list[-2])
-                    gear_shift_list = [gear_shift_list[-1]]  # 保持为列表形式
+                    gear_shift_list = [gear_shift_list[-1]]  
                     
-                    # 如果已经找到足够的有效换挡点，则添加最后一个并返回
                     if len(valid_gear_shift) >= cfg.MAX_GEAR_PTS:
                         valid_gear_shift.append(gear_shift_list[-1])
                         return valid_gear_shift[:cfg.MAX_GEAR_PTS]
@@ -115,27 +102,20 @@ def sum_up_gear_times(ego_data, yaw_data, gear_data, target_pos=None):
             # Update prev_gear after processing
             prev_gear = gear_data[i]
         else:
-            # No gear change
             prev_gear = gear_data[i]
     
-    # 添加最后一个有效的换挡点，除非已经有足够的点
     if gear_shift_list and len(valid_gear_shift) < cfg.MAX_GEAR_PTS:
-        # 检查最后一个换挡点与目标车位的距离
         if target_pos is not None:
             dx = gear_shift_list[-1][0] - target_pos[0]
             dy = gear_shift_list[-1][1] - target_pos[1]
             distance_to_target = math.sqrt(dx*dx + dy*dy)
             
-            # 只有当换挡点距离目标车位足够远时，才添加
             if distance_to_target >= cfg.CLOSE_TO_TARGET_THRESHOLD:
                 valid_gear_shift.append(gear_shift_list[-1])
         else:
-            # 如果没有提供目标车位，则直接添加
             valid_gear_shift.append(gear_shift_list[-1])
     
-    # 返回有效的换挡点（最多返回MAX_GEAR_PTS个）
     return valid_gear_shift[:cfg.MAX_GEAR_PTS]
-
 
 def obstacle_plot(background_img, obstacle_list, ego_origin):
     for pos in obstacle_list:
@@ -163,14 +143,11 @@ def obstacle_plot(background_img, obstacle_list, ego_origin):
         
         cv2.fillPoly(background_img, [pts], color=cfg.OBSTACLE_COLOR)
 
-
 def gear_pts_plot(gear_image, pos_list, yaw_list, gear_list, target_pos=None):
     ego_origin = [pos_list[0][0], pos_list[0][1], yaw_list[0]]
-    # 传入目标车位位置
     gear_points = sum_up_gear_times(pos_list, yaw_list, gear_list, target_pos) # a list of [x, y, yaw]
     
     if not len(gear_points):
-        # print("There is no gear shifting.") 
         return
     else: 
         for i in range(len(gear_points)): 
@@ -203,7 +180,6 @@ def ego_slot_plot(background_img, ego_origin, slot_origin):
     cv2.circle(background_img, img_slot_pos, cfg.TARGET_RADIUS, cfg.TARGET_COLOR, -1)  
 
 def check_sequence_in_bounds(pos_list, yaw_list, ego_origin):
-    """检查整个序列是否都在图像边界内"""
     for i in range(len(pos_list)):
         P_Ego = [pos_list[i][0], pos_list[i][1], yaw_list[i]]
         ego_atEgoCoordi = world_move(ego_origin, P_Ego)
@@ -211,74 +187,44 @@ def check_sequence_in_bounds(pos_list, yaw_list, ego_origin):
         pixel_x = int(cfg.CENTER[0] + ego_atEgoCoordi[1] * cfg.PIXELS_PER_METER_HM)
         pixel_y = int(cfg.CENTER[1] - ego_atEgoCoordi[0] * cfg.PIXELS_PER_METER_HM)
         
-        # 检查点是否在图像边界内（考虑圆的半径）
         if (pixel_x - cfg.HEATMAP_RADIUS < 0 or 
             pixel_x + cfg.HEATMAP_RADIUS >= cfg.WIDTH or 
             pixel_y - cfg.HEATMAP_RADIUS < 0 or 
             pixel_y + cfg.HEATMAP_RADIUS >= cfg.HEIGHT):
-            # 至少有一个点超出边界
             return False
     
-    # 所有点都在边界内
     return True
 
 def is_invalid_parking(gear_list, final_yaw, target_yaw):
-    """
-    检测是否为无效泊车案例
-    
-    无效情况:
-    1. 从始至终都是用"1"档 或 只有一次从"N"到"1"的切换
-    2. 完成泊车时车头朝向与目标车位朝向相差过大
-    
-    参数:
-    - gear_list: 整个泊车过程的档位列表
-    - final_yaw: 最终泊车位置的车头朝向（角度）
-    - target_yaw: 目标车位的朝向（角度）
-    
-    返回:
-    - bool: True表示无效案例，False表示有效案例
-    - str: 无效原因说明
-    """
-    # 1. 检查换挡情况
-    # 如果全部都是相同的档位
     if len(set(gear_list)) == 1:
         return True, f"Only used one gear: {gear_list[0]}"
     
-    # 如果只有N和1两种档位，且只有一次从N到1的转换
     if set(gear_list) == {"N", "1"}:
-        # 找到第一个"1"出现的位置
         try:
             first_one_index = gear_list.index("1")
-            # 检查之后是否只有"1"
             if set(gear_list[first_one_index:]) == {"1"}:
                 return True, "Only N to 1 transition, no gear shifting"
         except ValueError:
-            # 如果没有"1"，则全是"N"，已在第一个条件处理
             pass
     
-    # 2. 检查最终朝向与目标朝向的差异
-    # 计算角度差（标准化为-180到180度）
     yaw_diff = (final_yaw - target_yaw + 180) % 360 - 180
     abs_yaw_diff = abs(yaw_diff)
     
     if abs_yaw_diff > cfg.YAW_THRESHOLD:
         return True, f"Final heading differs from target by {abs_yaw_diff:.2f} degrees (> {cfg.YAW_THRESHOLD}°)"
     
-    # 通过所有检查，判定为有效
     return False, ""
 
 def main():
     
     name_list = [
-                # "00_Zhu", "01_Yuki", "02_James", 
-                #  "03_Takahashi", "04_Miao", "05_Seo", 
-                 "06_Shimomura", "07_Oliver", "08_Wang"]
-                # "06_Shimomura", "08_Wang"]
-    
+        "00_Zhu", "01_Yuki", "02_Gia", "03_Takahashi", "04_Miao",
+        "05_Seo", "06_Shimomura", "07_Nic", "08_Wang",
+    ]
+
     for name in name_list:
         source_path = '/path/to/dataset/carla_parking/' + name
         save_path = '/path/to/dataset/generated/'
-        # bad_case_path = '/path/to/dataset/generated/bad_cases/'
         scene_name = "carla_town04_"
         timestamp = "0318"
         
@@ -302,16 +248,14 @@ def main():
                 ego_trajectory_path = os.path.join(log_path, "measurements/")
                 obstacle_path = os.path.join(log_path, "parking_layout/")
 
-                ego_coordinates, ego_yaws, ego_gears = read_json_files(ego_trajectory_path)  # 读取轨迹path点集，[x,y], yaw
-                target_coordinates, target_yaws, _ = read_json_files(target_slot_path)  # 读取目标车位点绝对xy
+                ego_coordinates, ego_yaws, ego_gears = read_json_files(ego_trajectory_path)
+                target_coordinates, target_yaws, _ = read_json_files(target_slot_path)
                 static_data = parse_static_npc(obstacle_path)
 
-                # 检查是否为无效案例
                 is_invalid, invalid_reason = is_invalid_parking(ego_gears, ego_yaws[-1], target_yaws[0])
                 
                 if is_invalid:
                     print(f"====> Invalid parking case detected: {log_file} - {invalid_reason}")
-                    # 为无效案例创建保存路径
                     # bad_case_seq_path = os.path.join(bad_case_path, scene_name+timestamp, name, log_timestamp, log_file)
                     save_input_path = Path(bad_case_path, f"{log_file}/inputs/")
                     save_viz_path = Path(bad_case_path, f"{log_file}/viz/")
@@ -323,11 +267,9 @@ def main():
                     save_gsp_gt_path.mkdir(parents=True, exist_ok=True)
 
                     
-                    # 创建信息文件，记录无效原因
                     with open(os.path.join(save_info_path, "invalid_reason.txt"), "w") as f:
                         f.write(invalid_reason)
 
-                    # 在无效案例的保存部分添加详细信息文件
                     case_info = {
                         "reason": invalid_reason,
                         "log_file": log_file,
@@ -340,7 +282,6 @@ def main():
                     with open(os.path.join(save_info_path, "case_details.json"), "w") as f:
                         json.dump(case_info, f, indent=4)
                 else:
-                    # 为有效案例创建常规保存路径
                     save_input_path = Path(seq_path, f"{log_file}/inputs/")
                     save_viz_path = Path(seq_path, f"{log_file}/viz/")
                     save_gsp_gt_path = Path(seq_path, f"{log_file}/gt_gsp/")
@@ -349,7 +290,6 @@ def main():
                     save_viz_path.mkdir(parents=True, exist_ok=True)
                     save_gsp_gt_path.mkdir(parents=True, exist_ok=True)
                 
-                # 检查 ego_coordinates, ego_yaws 和 ego_gears 是否长度相同
                 if len(ego_coordinates) != len(ego_yaws) or len(ego_coordinates) != len(ego_gears):
                     raise ValueError("ego_coordinates, ego_yaws and ego_gears are not the same length")
 
@@ -365,7 +305,6 @@ def main():
                     egoYaw_seq = ego_yaws[seq_i:]
                     egoGear_seq = ego_gears[seq_i:]
                     
-                    # 检查序列是否都在边界内
                     if not check_sequence_in_bounds(egoPos_seq, egoYaw_seq, ego_origin):
                         print(f"====> Sequence {seq_i} contains points outside image bounds, skipping.")
                         continue
@@ -420,7 +359,6 @@ def main():
                     cv2.imwrite(str(save_viz_path/filename), viz_seq_debug)
                     cv2.imwrite(str(save_input_path/filename), back_seq_image)
                 print(f"=====> Successfully save sequence at {log_file}")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Data processer from CARLA parking')

@@ -34,15 +34,10 @@ def game_loop(args):
             pygame.display.flip()
 
     finally:
-
-        # if data_generator:
-        #     data_generator._carla_client.stop_recorder()
-
         if data_generator is not None:
             data_generator.destroy()
 
         pygame.quit()
-
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
@@ -51,7 +46,6 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Unsupported value encountered.')
-
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -117,28 +111,6 @@ def main():
         type=int,
         help='initial weather index (0=ClearNoon, 1=ClearSunset, 2=CloudyNoon, 3=CloudySunset, etc.). If not set, uses default (0)')
         
-        # 根据代码中的天气预设列表（删除 'Default' 后），可用索引为：
-        # 索引 0: ClearNoon - 晴朗正午
-        # 索引 1: ClearSunset - 晴朗日落
-        # 索引 2: ClearNight - 晴朗夜晚（新增）
-        # 索引 3: CloudyNoon - 多云正午
-        # 索引 4: CloudySunset - 多云日落
-        # 索引 5: CloudyNight - 多云夜晚（新增）
-        # 索引 6: HardRainNoon - 大雨正午
-        # 索引 7: HardRainSunset - 大雨日落
-        # 索引 8: HardRainNight - 大雨夜晚（新增）
-        # 索引 9: MidRainSunset - 中雨日落
-        # 索引 10: MidRainyNoon - 中雨正午
-        # 索引 11: MidRainyNight - 中雨夜晚（新增）
-        # 索引 12: SoftRainNoon - 小雨正午
-        # 索引 13: SoftRainSunset - 小雨日落
-        # 索引 14: SoftRainNight - 小雨夜晚（新增）
-        # 索引 15: WetCloudyNoon - 潮湿多云正午
-        # 索引 16: WetCloudySunset - 潮湿多云日落
-        # 索引 17: WetCloudyNight - 潮湿多云夜晚（新增）
-        # 索引 18: WetNoon - 潮湿正午
-        # 索引 19: WetSunset - 潮湿日落
-        # 索引 20: WetNight - 潮湿夜晚（新增）
         
     argparser.add_argument(
         '--random_seed',
@@ -212,7 +184,6 @@ def main():
 
     except KeyboardInterrupt:
         logging.info('Cancelled by user. Bye!')
-
 
 if __name__ == '__main__':
     main()

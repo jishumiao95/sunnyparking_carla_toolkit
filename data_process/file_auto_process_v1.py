@@ -5,26 +5,6 @@ import pdb
 val_sample_ratio = 0.1  # Adjust this number by requirements
 
 def copy_seq_images(source_path, destination_path):
-    """
-    复制序列图像数据从源路径到目标路径，并按特定格式重命名。
-
-    参数:
-        source_path (Path): 源数据路径，期望包含多个子文件夹，每个子文件夹下有'seq'目录
-        destination_path (Path): 目标路径，将在此创建'images'和'head1'子目录
-
-    功能描述:
-    1. 遍历source_path下的所有文件夹
-    2. 在每个文件夹的'seq'目录下查找任务文件夹(task_X)
-    3. 对每个任务文件夹:
-       - 从'inputs'子目录复制PNG文件到destination_path/images/
-       - 从'gt'子目录复制PNG文件到destination_path/head1/
-    4. 复制时会重命名文件为: {scene_name}_{name}_{folder_name}_{task_name}_{original_filename}
-
-    注意:
-    - 使用全局变量scene_name和name作为文件名前缀
-    - 自动创建目标目录结构
-    - 保留原始文件的元数据(使用shutil.copy2)
-    """
     
     global name, scene_name
     # Create destination directory if it doesn't exist
@@ -63,7 +43,6 @@ def copy_seq_images(source_path, destination_path):
                         i+=1
                         print(f"Copied: {file.name}, count: {i}")
 
-
 def copy_input_images(source_path, destination_path):
     global name, scene_name
 
@@ -100,7 +79,6 @@ def copy_input_images(source_path, destination_path):
                     shutil.copy2(file, dest_file)
                     i+=1
                     print(f"Copied: {file.name}, count: {i}")
-
 
 def divide_train_val(destination_path, val_sample_ratio):
     """
@@ -278,15 +256,17 @@ def copy_head_data(source_path, dest_path, n_frames_to_remove):
 if __name__ == "__main__":
 
     head_list = ["1", "2"]
-    driver_list =  {"00_Zhu": "1", 
-                   "01_Yuki": "3", 
-                   "02_James": "2", 
-                   "03_Takahashi": "2",  
-                   "04_Miao": "1",
-                   "05_Seo": "2", 
-                   "06_Shimomura": "2", 
-                   "07_Oliver": "3", 
-                   "08_Wang": "3"}
+    driver_list = {
+        "00_Zhu": "1",
+        "01_Yuki": "3",
+        "02_Gia": "2",
+        "03_Takahashi": "2",
+        "04_Miao": "1",
+        "05_Seo": "2",
+        "06_Shimomura": "2",
+        "07_Nic": "3",
+        "08_Wang": "3",
+    }
 
     scene_name = "carla_town04"
 

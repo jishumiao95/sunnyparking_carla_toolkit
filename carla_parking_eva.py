@@ -7,7 +7,6 @@ from data_generation.network_evaluator import NetworkEvaluator
 from data_generation.keyboard_control import KeyboardControl
 from agent.parking_agent import ParkingAgent, show_control_info
 
-
 def game_loop(args):
     pygame.init()
     pygame.font.init()
@@ -39,12 +38,10 @@ def game_loop(args):
             frame_start_time = pygame.time.get_ticks()
             
             network_evaluator.world_tick()
-            # 使用与 CARLA 相同的帧率
             clock.tick_busy_loop(args.target_fps)
             
-            # 计算实际帧率
             frame_count += 1
-            if pygame.time.get_ticks() - fps_update_time > 1000:  # 每秒更新一次
+            if pygame.time.get_ticks() - fps_update_time > 1000:
                 current_fps = frame_count
                 carla_fps = network_evaluator.world.get_fps()
                 print(f"\r ==> Pygame FPS: {current_fps}, CARLA FPS: {carla_fps}.", end='', flush=True)
@@ -69,7 +66,6 @@ def game_loop(args):
 
         pygame.quit()
 
-
 def str2bool(v):
     if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
         return True
@@ -77,7 +73,6 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Unsupported value encountered.')
-
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -231,7 +226,6 @@ def main():
 
     except KeyboardInterrupt:
         logging.info('Cancelled by user. Bye!')
-
 
 if __name__ == '__main__':
     main()

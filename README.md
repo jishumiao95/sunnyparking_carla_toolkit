@@ -3,7 +3,7 @@
 Toolkit for our IEEE Access paper
 [*SunnyParking: Multi-Shot Trajectory Generation and Motion State Awareness for Human-like Parking*](https://doi.org/10.1109/ACCESS.2026.3752444).
 
-Companion to the paper dataset on Hugging Face: [MPRG/sunnyparking](https://huggingface.co/datasets/MPRG/sunnyparking) — collect human park-ins in CARLA, then recapture sensors from recording logs.
+Companion to the paper dataset on Hugging Face: [MPRG/sunnyparking](https://huggingface.co/datasets/MPRG/sunnyparking) — collect human park-ins in CARLA, then recapture sensors from recording logs. The released dataset includes the original recorder logs, so you can restore each scene and recapture the sensor parameters you want.
 
 Thanks to [e2e-parking-carla](https://github.com/qintonguav/e2e-parking-carla) for the codebase this toolkit builds on.
 
@@ -22,23 +22,80 @@ Depth recap is production-ready (`depth_front/left/right/rear`, 400×300, fov 10
 
 ## Setup
 
-- CARLA 0.9.13 (match the Python API)
-- `environment.yml` (Python 3.10)
+We tested this toolkit on **CARLA 0.9.13** (server and Python API must match). Newer CARLA builds are welcome — adapt the client / API and you can often get better simulation fidelity and sensor quality.
+
+Prerequisites (both paths):
+
+- CARLA server running (`./CarlaUE4.sh -prefernvidia`); keep the Python `carla` package on the same version as the server
 - Recap needs per-task `measurements/`, `rgb_*`, and a replayable `replay/recoding.log`
 - Optional: G29 via `wheel_config.ini`
+
+For **sensor recapture**, you can run CARLA **offscreen / headless** (no display, no pygame UI) — e.g. `./CarlaUE4.sh -prefernvidia -RenderOffScreen` — then drive `carla_sensor_recap.py` from either Conda or Docker. 
+
+<details>
+<summary><b>Conda (host)</b></summary>
 
 ```bash
 git clone https://github.com/jishumiao95/sunnyparking_carla_toolkit.git
 cd sunnyparking_carla_toolkit
 conda env create -f environment.yml
 conda activate e2e
+
+# Install CARLA Python API into this env (run from the CARLA 0.9.13 install root)
+# Official egg is built for py3.7; setup_carla.sh unpacks it and pip-installs for py3.10.
+cd /path/to/CARLA_0.9.13
+bash /path/to/sunnyparking_carla_toolkit/setup_carla.sh
+cd /path/to/sunnyparking_carla_toolkit
+
+python -c "import carla; print(carla.__file__)"   # sanity check
 ```
 
-If CARLA runs on the host and this repo is bind-mounted into Docker (`/workspace`), map paths so the server can open the recorder file:
+No GPU / different CUDA: edit `environment.yml` — drop `pytorch-cuda=11.7` and add `cpuonly`, or change the CUDA package to match your driver.
+
+</details>
+
+<details>
+<summary><b>Docker (client in container, CARLA on host)</b></summary>
+
+Validated layout: CARLA server on the **host**, toolkit + dataset bind-mounted at **`/workspace`** inside the container. Symlinks and recap paths should stay as container paths (`/workspace/...`).
+
+```bash
+# Host: start CARLA first
+./CarlaUE4.sh -prefernvidia
+
+# Example container (adjust image / mounts). Prefer --network host so :2000 reaches the server.
+docker run --gpus all -it --rm --network host \
+  -v /home/USER/workspace:/workspace \
+  -w /workspace/sunnyparking_carla_toolkit \
+  nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu22.04 bash
+```
+
+Inside the container:
+
+```bash
+# Miniconda (once), then the project env
+# ... install miniconda, then:
+cd /workspace/sunnyparking_carla_toolkit
+conda env create -f environment.yml
+conda activate e2e
+
+# CARLA client — same as host path; point setup at the CARLA tree you mount or copy
+cd /path/to/CARLA_0.9.13
+bash /workspace/sunnyparking_carla_toolkit/setup_carla.sh
+cd /workspace/sunnyparking_carla_toolkit
+
+python -c "import carla; print(carla.__file__)"
+```
+
+When the host CARLA server opens recorder files, remap container → host paths (auto from `/proc/self/mountinfo`, or set explicitly):
 
 ```bash
 --server_path_map /workspace=/home/USER/workspace
 ```
+
+Recap / collect commands use container paths under `/workspace`. Keep `--host 127.0.0.1 --port 2000` with `--network host`.
+
+</details>
 
 ## 1. Collect
 
@@ -141,7 +198,7 @@ python3 tool/pack_recap_stitched_zip.py \
 python3 tool/pack_recap_rgb_depth_zip.py --help
 ```
 
-Full notes: [sensor_recap_manual.md](./sensor_recap_manual.md)
+Longer operator checklist (QA / symlink / rollback): [sensor_recap_manual.md](./sensor_recap_manual.md)
 
 ## Layout
 

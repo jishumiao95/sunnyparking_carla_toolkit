@@ -18,7 +18,6 @@ parking_vehicle_rotation = [
     carla.Rotation(yaw=0)
 ]
 
-
 def find_weather_presets():
     # presets = [x for x in dir(carla.WeatherParameters) if re.match('[A-Z].+', x)]
     presets = ['ClearNoon', 'ClearSunset', 
@@ -35,10 +34,8 @@ def find_weather_presets():
     print(presets)
     return [(getattr(carla.WeatherParameters, x), x) for x in presets]
 
-
 def sensor_callback(sensor_data, sensor_queue, sensor_name):
     sensor_queue.put((sensor_data, sensor_name))
-
 
 class World(object):
     def __init__(self, carla_world, args, evaluation_mode=False):
@@ -46,7 +43,7 @@ class World(object):
             # In evaluation mode, only use base position without variations
             self._generalization_offset = [(0.0, 0.0)]
             self._offset_index = 0
-            return  # 添加return语句，防止后续代码覆盖evaluation mode的设置
+            return
         
         # Original logic for training mode with position variations
         min_x = -abs(args.x_range)
@@ -76,7 +73,7 @@ class World(object):
         self._steering_angle = args.steering_angle
         print(f"now steering angle is {self._steering_angle}")
         settings = self._world.get_settings()
-        settings.fixed_delta_seconds = float(1 / args.target_fps)  # 使用配置的目标帧率
+        settings.fixed_delta_seconds = float(1 / args.target_fps)
         settings.synchronous_mode = True
         if hasattr(args, 'time_scale'):
             settings.time_scale = args.time_scale
@@ -157,7 +154,7 @@ class World(object):
     def change_physics_control(self, physics_control, new_max_steer_angle):
         new_wheels = []
         for idx, wheel in enumerate(physics_control.wheels):
-            if idx in [0, 1]:  # 前轮索引
+            if idx in [0, 1]:
 
                 # tire_friction (float)
                 # A scalar value that indicates the friction of the wheel.
@@ -175,7 +172,7 @@ class World(object):
                 new_wheel = carla.WheelPhysicsControl(
                     tire_friction=wheel.tire_friction,
                     damping_rate=wheel.damping_rate,
-                    max_steer_angle=new_max_steer_angle,  # 修改此处
+                    max_steer_angle=new_max_steer_angle,
                     radius=wheel.radius,
                     max_brake_torque=wheel.max_brake_torque,
                     max_handbrake_torque=wheel.max_handbrake_torque,
@@ -185,7 +182,6 @@ class World(object):
             else:
                 new_wheels.append(wheel)
  
-# 创建新的VehiclePhysicsControl对象（保留其他参数）
         new_physics_control = carla.VehiclePhysicsControl(
             wheels=new_wheels,
             torque_curve=physics_control.torque_curve,
@@ -747,5 +743,4 @@ class World(object):
             self._all_parking_goals.clear()
 
     def get_fps(self):
-        """获取 CARLA 世界的当前帧率"""
         return 1.0 / self._world.get_settings().fixed_delta_seconds
